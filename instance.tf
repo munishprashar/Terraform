@@ -25,6 +25,9 @@ resource "azurerm_virtual_machine" "demo-instance" {
     admin_password = "Admin@123456"
     
   }
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
  
 }  
 

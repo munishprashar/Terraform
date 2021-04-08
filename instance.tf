@@ -7,8 +7,7 @@ resource "azurerm_virtual_machine" "demo-instance" {
     vm_size = "Standard_DS1_v2"
     delete_os_disk_on_termination = true 
     delete_data_disks_on_termination = true
-
-storage_image_reference {
+    storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "16.04-LTS"
@@ -24,11 +23,10 @@ storage_image_reference {
     computer_name  = "demo-instance"
     admin_username = "testadmin"
     admin_password = "Admin@123456"
+    
   }
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-}
+ 
+}  
 
 resource "azurerm_network_interface" "demo-instance" {
     name = "${var.prefix}-instance1"

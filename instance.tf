@@ -4,7 +4,7 @@ resource "azurerm_virtual_machine" "demo-instance" {
     location = var.location
     resource_group_name = azurerm_resource_group.demo.name 
     network_interface_ids = [azurerm_network_interface.demo-instance.id]
-    vm_size = "Standard_DS1_v2"
+    vm_size = "Standard_B1S"
     delete_os_disk_on_termination = true 
     delete_data_disks_on_termination = true
     storage_image_reference {
@@ -28,7 +28,7 @@ resource "azurerm_virtual_machine" "demo-instance" {
   os_profile_linux_config {
     disable_password_authentication = false
   }
- 
+ tags = {for k, v in merge({name="instance1"},var.project_tags): k => lower(v) }
 }  
 
 resource "azurerm_network_interface" "demo-instance" {
@@ -37,16 +37,21 @@ resource "azurerm_network_interface" "demo-instance" {
     resource_group_name = azurerm_resource_group.demo.name 
     #network_security_group_id = azurerm_network_security_group.allow-ssh.id 
 
-    ip_configuration {
-    name                          = "instance1"
+    dynamic ip_configuration {
+      for_each = var.ip-config 
+      content {
+    name                          = lookup(ip_configuration.value,"name")
     subnet_id                     = azurerm_subnet.demo-subnet-1.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id = azurerm_public_ip.demo-instance.id 
+    private_ip_address_allocation = lookup(ip_configuration.value,"allocation")
+    public_ip_address_id = azurerm_public_ip.demo-instance[ip_configuration.key].id 
+    primary = lookup(ip_configuration.value, "primary")
   }
+    }
 }
 resource "azurerm_public_ip" "demo-instance" {
-    name = "instance1-publi-ip"
+    count = length(var.ip-config)
+    name = "instance1-public-ip-${count.index}"
     location = var.location
     resource_group_name = azurerm_resource_group.demo.name
-    allocation_method = "Dynamic"
+    allocation_method = "Static"
 }

@@ -2,10 +2,10 @@ provider "azurerm" {
   features {}
 }
 resource "azurerm_resource_group" "demo" {
-    name = "for-foreach-demo"
+    name = "autoscaling-demo"
     location = var.location
     tags = {
-        env = "resource_group_demo"
+        env = "autoscaling_new_demo"
     }
 }
 

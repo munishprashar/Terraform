@@ -1,3 +1,4 @@
+
 resource "azurerm_virtual_network" "demo" {
     name = "${var.prefix}-network"
     location = var.location
@@ -24,6 +25,19 @@ resource "azurerm_network_security_group" "allow-ssh" {
       protocol               = "tcp"
       source_port_range      = "*"
       destination_port_range = "22"
+      source_address_prefix  = var.ssh-source-address
+      destination_address_prefix = "*"
+      description            = "description-myssh"
+    }
+    security_rule {
+        
+      name                   = "http"
+      priority               = 1002
+      direction              = "Inbound"
+      access                 = "Allow"
+      protocol               = "tcp"
+      source_port_range      = "*"
+      destination_port_range = "80"
       source_address_prefix  = var.ssh-source-address
       destination_address_prefix = "*"
       description            = "description-myssh"

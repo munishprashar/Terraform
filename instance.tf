@@ -1,57 +1,64 @@
 #we will create an instance
-resource "azurerm_virtual_machine" "demo-instance" {
-    name = "${var.prefix}-vm"
+    resource "azurerm_virtual_machine_scale_set" "demo-instance" {
+    name = "mytestscaleset-1"
     location = var.location
     resource_group_name = azurerm_resource_group.demo.name 
-    network_interface_ids = [azurerm_network_interface.demo-instance.id]
-    vm_size = "Standard_B1S"
-    delete_os_disk_on_termination = true 
-    delete_data_disks_on_termination = true
-    storage_image_reference {
+    #scale set options
+    #automatic rolling upgrade
+    automatic_os_upgrade = true
+    upgrade_policy_mode = "Rolling"
+    rolling_upgrade_policy {
+      max_batch_instance_percent = 20
+      max_unhealthy_instance_percent = 20
+      max_unhealthy_upgrade_instance_percent = 5
+      pause_time_between_batches = "PT0S"
+    }
+    # what will be rolling upgrade upgrade
+    health_probe_id = azure_lb_probe.demo.id 
+    zones = var.zones
+    sku {
+      name = "Standard_B1S"
+      tier = "Standard"
+      capacity = 2
+    }
+    storage_profile_image_refrence {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "16.04-LTS"
-    version   = "latest"
-  }
+    version   = "latest"  
+    }
+    
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = ""
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
+  #we are adding addtional storage of 10GB
+  storage_profile_data_disk {
+    lun = 0
+    caching = "ReadWrite"
+    disk_size_gb = 10
+  }
   os_profile {
-    computer_name  = "demo-instance"
-    admin_username = "testadmin"
+    computer_name  = "demo"
+    admin_username = "demo"
     admin_password = "Admin@123456"
-    
+    custom_data = "#!/bin/bash\n\napt-get update && apt-get install -y nginx && systemctl enable nginx && systemctl start nginx"
   }
   os_profile_linux_config {
     disable_password_authentication = false
   }
- tags = {for k, v in merge({name="instance1"},var.project_tags): k => lower(v) }
+ network_profile {
+   name = "networkprofile"
+   primary = true 
+   network_security_group_id = azurerm_network_security_group.demo-instance.id 
+   ip_configuration {
+     name = "IPConfiguration"
+     primary = true
+     subnet_id = azurerm_subnet.demo-subnet-1.id 
+     load_balancer_backend_address_poll_ids = [azurerm_lb_backend_address_pool.bpepool.id]
+     load_balancer_inbound_nat_rules_ids = [azurerm_lb_nat_pool.id]
+   }
+ }
 }  
-
-resource "azurerm_network_interface" "demo-instance" {
-    name = "${var.prefix}-instance1"
-    location = var.location
-    resource_group_name = azurerm_resource_group.demo.name 
-    #network_security_group_id = azurerm_network_security_group.allow-ssh.id 
-
-    dynamic ip_configuration {
-      for_each = var.ip-config 
-      content {
-    name                          = lookup(ip_configuration.value,"name")
-    subnet_id                     = azurerm_subnet.demo-subnet-1.id
-    private_ip_address_allocation = lookup(ip_configuration.value,"allocation")
-    public_ip_address_id = azurerm_public_ip.demo-instance[ip_configuration.key].id 
-    primary = lookup(ip_configuration.value, "primary")
-  }
-    }
-}
-resource "azurerm_public_ip" "demo-instance" {
-    count = length(var.ip-config)
-    name = "instance1-public-ip-${count.index}"
-    location = var.location
-    resource_group_name = azurerm_resource_group.demo.name
-    allocation_method = "Static"
-}

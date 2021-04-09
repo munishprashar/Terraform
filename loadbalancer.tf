@@ -40,7 +40,7 @@ resource "azurerm_lb_probe" "demo" {
   request_path = "/"
   port                = 80
 }
-resource "azurerm_lb_probe" "demo" {
+resource "azurerm_lb_rule" "demo" {
   resource_group_name = azurerm_resource_group.demo.name
   loadbalancer_id     = azurerm_lb.demo.id
   name                = "LBRule"

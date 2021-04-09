@@ -4,7 +4,7 @@ resource "azurerm_lb" "demo" {
     location = var.location
     resource_group_name = azurerm_resource_group.demo.name 
 
-    front_end_ip_configuration {
+    frontend_ip_configuration {
         name = "PublicIpAddress"
         public_ip_address_id = azurerm_public_ip.demo.id 
     }
@@ -45,9 +45,9 @@ resource "azurerm_lb_rule" "demo" {
   loadbalancer_id     = azurerm_lb.demo.id
   name                = "LBRule"
   protocol = "Tcp"
-  front_end_port = 80
-  backend_end_port = 80
-  front_end_ip_configuration = "PublicIPAddress"
-  probe_id = azure_lb_probe.demo.id 
-  backend_address_poll_id = azurerm_lb_backend_address_pool.bpepool.id
+  frontend_port = 80
+  backend_port = 80
+  frontend_ip_configuration_name = "PublicIPAddress"
+  probe_id = azurerm_lb_probe.demo.id 
+  backend_address_pool_id = azurerm_lb_backend_address_pool.bpepool.id
  }

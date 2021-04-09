@@ -1,9 +1,8 @@
-resource "azurerm_monitor_autoscale_setting" "example" {
+resource "azurerm_monitor_autoscale_setting" "demo" {
   name                = "demoautoscaling"
   resource_group_name = azurerm_resource_group.demo.name
   location            = var.location
   target_resource_id  = azurerm_virtual_machine_scale_set.demo.id
-
   profile {
     name = "defaultProfile"
 
